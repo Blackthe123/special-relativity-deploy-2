@@ -68,9 +68,7 @@ const SpecialRelativitySimulation = () => {
     if (isRunning) {
       cancelAnimationFrame(animationRef.current);
       lastTimeRef.current = 0;
-    } else {
-      setElapsedTime(0);
-    }
+    } 
     setIsRunning(!isRunning);
   };
   
