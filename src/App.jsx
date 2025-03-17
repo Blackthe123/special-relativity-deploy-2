@@ -192,7 +192,7 @@ const SpecialRelativitySimulation = () => {
             <div className="flex flex-col space-y-6">
               <div>
                 <p className="mb-2">Stationary observer's ruler:</p>
-                <div className="h-8 bg-blue-100 border border-blue-500 relative w-full">
+                <div className="h-12 bg-blue-100 border border-blue-500 relative w-full">
                   <div className="absolute inset-y-0 left-0 border-r border-blue-500"></div>
                   <div className="absolute inset-y-0 right-0 border-l border-blue-500"></div>
                   <div className="flex justify-between px-2 h-full items-center">
@@ -213,7 +213,7 @@ const SpecialRelativitySimulation = () => {
               
               <div>
                 <p className="mb-2">Moving observer's ruler (at {velocityPercent}% of c):</p>
-                <div className="h-8 bg-red-100 border border-red-500 relative" style={{ width: `${lengthContraction * 100}%` }}>
+                <div className="h-12 bg-red-100 border border-red-500 relative" style={{ width: `${lengthContraction * 100}%` }}>
                   <div className="absolute inset-y-0 left-0 border-r border-red-500"></div>
                   <div className="absolute inset-y-0 right-0 border-l border-red-500"></div>
                   <div className="flex justify-between px-2 h-full items-center overflow-hidden">
