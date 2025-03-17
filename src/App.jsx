@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 const SpecialRelativitySimulation = () => {
   // State for simulation parameters
   const [velocity, setVelocity] = useState(0.5); // As a fraction of c
+  const [sliderValue, setSliderValue] = useState(0.5); // Raw slider value
   const [viewMode, setViewMode] = useState('length'); // 'length' or 'time'
   const [isRunning, setIsRunning] = useState(false);
   const [useLogarithmic, setUseLogarithmic] = useState(false);
@@ -17,26 +18,43 @@ const SpecialRelativitySimulation = () => {
   const lengthContraction = 1 / gamma;
   const timeDilation = gamma;
   
-  // Handle slider change
-  const handleVelocityChange = (e) => {
-    let newVelocity;
+  // Convert between slider value and velocity with enhanced logarithmic scaling
+  useEffect(() => {
     if (useLogarithmic) {
-      // Convert from logarithmic slider value (0-1) to velocity (0.1c-0.99c)
-      // Using a function that gives finer control as we approach c
-      const sliderValue = parseFloat(e.target.value);
-      newVelocity = 0.1 + (1 - 0.1) * (1 - Math.pow(1 - sliderValue, 4));
-      // Cap at 0.99c to avoid infinity issues
-      newVelocity = Math.min(newVelocity, 0.99);
+      // For logarithmic scale, use a more extreme mapping function
+      // This gives extremely fine control as we approach c
+      const minVelocity = 0.9; // Start at 0.9c for logarithmic scale
+      const maxVelocity = 0.9999; // Go up to 0.9999c
+      
+      // Enhanced logarithmic mapping using negative exponent
+      // This creates much finer granularity at higher values
+      const exponent = 4;
+      const mappedValue = 1 - Math.pow(1 - sliderValue, exponent);
+      const newVelocity = minVelocity + (maxVelocity - minVelocity) * mappedValue;
+      
+      setVelocity(newVelocity);
     } else {
-      // Linear scale directly from slider
-      newVelocity = parseFloat(e.target.value);
+      // Linear scale: slider value directly maps to velocity (0.1c-0.9c)
+      const minVelocity = 0.1;
+      const maxVelocity = 0.9;
+      const newVelocity = minVelocity + (maxVelocity - minVelocity) * sliderValue;
+      setVelocity(newVelocity);
     }
-    setVelocity(newVelocity);
+  }, [sliderValue, useLogarithmic]);
+  
+  // Handle slider change
+  const handleSliderChange = (e) => {
+    // Always keep slider value between 0-1
+    const newValue = parseFloat(e.target.value);
+    setSliderValue(newValue);
   };
   
   // Toggle between linear and logarithmic scale
   const toggleScale = () => {
+    // When toggling scale, maintain approximate position on slider
+    // but reset to midpoint if velocity would be outside new range
     setUseLogarithmic(!useLogarithmic);
+    setSliderValue(0.5); // Reset to middle of slider for better UX when switching scales
   };
   
   // Animation loop for time dilation visualization
@@ -81,7 +99,7 @@ const SpecialRelativitySimulation = () => {
   };
   
   // Format velocity for display
-  const velocityPercent = (velocity * 100).toFixed(1);
+  const velocityPercent = (velocity * 100).toFixed(useLogarithmic ? 4 : 1);
   
   // Calculate clock times
   const stationaryTime = elapsedTime.toFixed(2);
@@ -128,23 +146,46 @@ const SpecialRelativitySimulation = () => {
             <span className={`ml-2 ${useLogarithmic ? 'font-semibold' : 'text-gray-400'}`}>Logarithmic</span>
           </div>
         </div>
+        
+        {/* Use a consistent slider from 0-1 */}
         <input
           type="range"
-          min={useLogarithmic ? "0" : "0.1"}
-          max={useLogarithmic ? "1" : "0.9"}
-          step={useLogarithmic ? "0.01" : "0.01"}
-          value={useLogarithmic ? Math.pow(1 - ((1 - velocity - 0.1) / 0.9), 0.25) : velocity}
-          onChange={handleVelocityChange}
+          min="0"
+          max="1"
+          step="0.001" // Finer step for more precise control
+          value={sliderValue}
+          onChange={handleSliderChange}
           className="w-full h-2 bg-gray-300 rounded-lg appearance-none cursor-pointer"
         />
+        
         <div className="flex justify-between text-sm mt-1">
-          <span>0.1c</span>
-          <span>{useLogarithmic ? "0.99c" : "0.9c"}</span>
+          <span>{useLogarithmic ? "0.9c" : "0.1c"}</span>
+          <span>{useLogarithmic ? "0.9999c" : "0.9c"}</span>
+        </div>
+        
+        {/* Display exact velocity value */}
+        <div className="text-center mt-2 text-sm">
+          Current velocity: {velocity.toFixed(useLogarithmic ? 6 : 4)}c
+          {velocity > 0.6 && velocity < 0.7 && !useLogarithmic && (
+            <span className="ml-2 text-blue-600 font-semibold">
+              (Effects becoming noticeable)
+            </span>
+          )}
+          {velocity > 0.99 && (
+            <span className="ml-2 text-red-600 font-semibold">
+              (Extreme relativistic effects)
+            </span>
+          )}
+        </div>
+        
+        {/* Gamma value indicator */}
+        <div className="text-center mt-1 text-sm">
+          Lorentz factor (γ): {gamma.toFixed(2)}
         </div>
       </div>
       
       {/* Simulation display */}
-      <div className="bg-white p-6 rounded-lg shadow-sm mb-6 h-64 flex flex-col justify-center">
+      <div className="bg-white p-6 rounded-lg shadow-sm mb-6 h-75 flex flex-col justify-center">
         {viewMode === 'length' ? (
           <div className="w-full">
             <h3 className="text-center mb-4 font-semibold">Length Contraction Demo</h3>
@@ -175,7 +216,7 @@ const SpecialRelativitySimulation = () => {
                 <div className="h-8 bg-red-100 border border-red-500 relative" style={{ width: `${lengthContraction * 100}%` }}>
                   <div className="absolute inset-y-0 left-0 border-r border-red-500"></div>
                   <div className="absolute inset-y-0 right-0 border-l border-red-500"></div>
-                  <div className="flex justify-between px-2 h-full items-center">
+                  <div className="flex justify-between px-2 h-full items-center overflow-hidden">
                     <span>0</span>
                     <span>1</span>
                     <span>2</span>
@@ -192,8 +233,8 @@ const SpecialRelativitySimulation = () => {
               </div>
             </div>
             <p className="text-center mt-4 text-sm">
-              Length contraction factor: {lengthContraction.toFixed(3)} 
-              (A 10m object appears as {(10 * lengthContraction).toFixed(2)}m)
+              Length contraction factor: {lengthContraction.toFixed(6)} 
+              (A 10m object appears as {(10 * lengthContraction).toFixed(3)}m)
             </p>
           </div>
         ) : (
@@ -230,7 +271,7 @@ const SpecialRelativitySimulation = () => {
             </div>
             <p className="text-center mt-4 text-sm">
               Time dilation factor: {timeDilation.toFixed(3)}
-              (1 second for the moving observer is {timeDilation.toFixed(2)} seconds for the stationary observer)
+              (1 second for the moving observer is {timeDilation.toFixed(3)} seconds for the stationary observer)
             </p>
           </div>
         )}
