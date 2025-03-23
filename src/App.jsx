@@ -1,79 +1,79 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 const SpecialRelativitySimulation = () => {
-  // State for simulation parameters
-  const [velocity, setVelocity] = useState(0.5); // As a fraction of c
-  const [sliderValue, setSliderValue] = useState(0.5); // Raw slider value
-  const [viewMode, setViewMode] = useState('length'); // 'length' or 'time'
-  const [isRunning, setIsRunning] = useState(false);
-  const [useLogarithmic, setUseLogarithmic] = useState(false);
-  const [elapsedTime, setElapsedTime] = useState(0);
+  // UseState rerenders page upon state change (example: user changing clider value)
+  const [velocity, setVelocity] = useState(0.5); //This will be used as a fraction of the speed of light
+  const [sliderValue, setSliderValue] = useState(0.5); //Actual value of the slider
+  const [viewMode, setViewMode] = useState('length'); //Length or Time windows
+  const [isRunning, setIsRunning] = useState(false); //For stopwatch animation
+  const [useLogarithmic, setUseLogarithmic] = useState(false); //For Linear and Logarithmic scale
+  const [elapsedTime, setElapsedTime] = useState(0); //For time caclulation and resetting
   
-  // Animation frame reference
+  //UseRef: Value that changes in background and only reflects after rerendering. This makes it perfect 
+  //for storing values that change frequently, like timestamps in an animation.
   const animationRef = useRef(null);
   const lastTimeRef = useRef(0);
   
-  // Calculate relativistic effects based on velocity
+  //Calculating relativistic effects based on velocity (formulae given)
   const gamma = 1 / Math.sqrt(1 - velocity * velocity);
   const lengthContraction = 1 / gamma;
   const timeDilation = gamma;
   
-  // Convert between slider value and velocity with enhanced logarithmic scaling
+  //UseEffect: Handles stuff at rerendering. If there is stage change, there is rerendering of page triggering useeffect.
   useEffect(() => {
     if (useLogarithmic) {
-      // For logarithmic scale, use a more extreme mapping function
-      // This gives extremely fine control as we approach c
-      const minVelocity = 0.9; // Start at 0.9c for logarithmic scale
-      const maxVelocity = 0.9999; // Go up to 0.9999c
+      const minVelocity = 0.9; //Log scale starts at 0.9
+      const maxVelocity = 0.9999; //It goes up to 0.9999
       
-      // Enhanced logarithmic mapping using negative exponent
-      // This creates much finer granularity at higher values
+      //Logic to handle log scalar in a granular manner
       const exponent = 4;
       const mappedValue = 1 - Math.pow(1 - sliderValue, exponent);
       const newVelocity = minVelocity + (maxVelocity - minVelocity) * mappedValue;
       
       setVelocity(newVelocity);
     } else {
-      // Linear scale: slider value directly maps to velocity (0.1c-0.9c)
-      const minVelocity = 0.1;
-      const maxVelocity = 0.9;
+      //Linear scale
+      const minVelocity = 0.1;//Linear scale starts at 0.1
+      const maxVelocity = 0.9; //Linear scale ends at 0.9
       const newVelocity = minVelocity + (maxVelocity - minVelocity) * sliderValue;
       setVelocity(newVelocity);
     }
   }, [sliderValue, useLogarithmic]);
   
-  // Handle slider change
+  //Handle slider change by user
   const handleSliderChange = (e) => {
-    // Always keep slider value between 0-1
-    const newValue = parseFloat(e.target.value);
-    setSliderValue(newValue);
+    const newValue = parseFloat(e.target.value); //get value from slider
+    setSliderValue(newValue); //set variable to reflect change
   };
   
   // Toggle between linear and logarithmic scale
   const toggleScale = () => {
-    // When toggling scale, maintain approximate position on slider
-    // but reset to midpoint if velocity would be outside new range
+    //When toggling scale reset to midpoint of slider
     setUseLogarithmic(!useLogarithmic);
-    setSliderValue(0.5); // Reset to middle of slider for better UX when switching scales
+    setSliderValue(0.5);
   };
   
-  // Animation loop for time dilation visualization
+  //Animation loop for time dilation visualisation
   useEffect(() => {
-    if (!isRunning) return;
+    if (!isRunning) return; //Nothing happens if stopwatch is puased or reset
     
+    //animate: updates the elapsed time continuously using requestAnimationFrame
+    //lasTimeRef.current: Stores the timestamp of the last frame
+    //timestamp: Time elapsed since start of browser in milliseconds
     const animate = (timestamp) => {
-      if (!lastTimeRef.current) lastTimeRef.current = timestamp;
-      const deltaTime = timestamp - lastTimeRef.current;
-      lastTimeRef.current = timestamp;
+      if (!lastTimeRef.current) lastTimeRef.current = timestamp; //For first frame
+      const deltaTime = timestamp - lastTimeRef.current; //Time difference between frames
+      lastTimeRef.current = timestamp; //Update last time for next frame
       
-      // Update time differently for stationary and moving observers
+      //Update time on stopwatch noting millisecond conversion
       setElapsedTime(prev => prev + deltaTime / 1000);
       
       animationRef.current = requestAnimationFrame(animate);
     };
     
-    animationRef.current = requestAnimationFrame(animate);
+    animationRef.current = requestAnimationFrame(animate); //Recursive calling for continuous update
     
+    //Cancelling animation appropriately
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
@@ -81,7 +81,7 @@ const SpecialRelativitySimulation = () => {
     };
   }, [isRunning]);
   
-  // Start/stop animation
+  //Start/stop animation
   const toggleAnimation = () => {
     if (isRunning) {
       cancelAnimationFrame(animationRef.current);
@@ -90,7 +90,7 @@ const SpecialRelativitySimulation = () => {
     setIsRunning(!isRunning);
   };
   
-  // Reset simulation
+  //Reset stopwatch
   const resetSimulation = () => {
     setIsRunning(false);
     cancelAnimationFrame(animationRef.current);
@@ -98,16 +98,16 @@ const SpecialRelativitySimulation = () => {
     lastTimeRef.current = 0;
   };
   
-  // Format velocity for display
+  //Finding velocity as a %
   const velocityPercent = (velocity * 100).toFixed(useLogarithmic ? 4 : 1);
   
-  // Calculate clock times
+  //Calculate stopwatch times for stationary and moving observers
   const stationaryTime = elapsedTime.toFixed(2);
   const movingTime = (elapsedTime / timeDilation).toFixed(2);
   
-  return (
-    <div className="w-full max-w-4xl mx-auto p-6 bg-gray-100 rounded-lg shadow-md">
-      <h1 className="text-3xl font-bold text-center mb-6">Special Relativity Simulation</h1>
+  return(
+    <div className="w-full max-w-4xl mx-auto p-6 bg-gray-100 rounded-lg shadow-md"> {/*Grey bg*/}
+      <h1 className="text-3xl font-bold text-center mb-6">Special Relativity Simulation</h1> {/*Heading*/}
       
       {/* View mode toggle */}
       <div className="flex justify-center mb-6">
@@ -233,8 +233,7 @@ const SpecialRelativitySimulation = () => {
               </div>
             </div>
             <p className="text-center mt-4 text-sm">
-              Length contraction factor: {lengthContraction.toFixed(6)} 
-              (A 10m object appears as {(10 * lengthContraction).toFixed(3)}m)
+              Length contraction factor: {lengthContraction.toFixed(3)} (A 10m object appears as {(10 * lengthContraction).toFixed(3)}m)
             </p>
           </div>
         ) : (
@@ -270,8 +269,7 @@ const SpecialRelativitySimulation = () => {
               </button>
             </div>
             <p className="text-center mt-4 text-sm">
-              Time dilation factor: {timeDilation.toFixed(3)}
-              (1 second for the moving observer is {timeDilation.toFixed(3)} seconds for the stationary observer)
+              Time dilation factor: {timeDilation.toFixed(3)} (1 second for the moving observer is {timeDilation.toFixed(3)} seconds for the stationary observer)
             </p>
           </div>
         )}

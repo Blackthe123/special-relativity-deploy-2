@@ -11,7 +11,7 @@
     "preview": "vite preview",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist",
-    "update": "git add . && git commit -m 'Update site' && git push origin main && npm run deploy"
+    "update": "git add . && git commit -m \"Update site\" && git push origin main && npm run deploy"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.0.9",
