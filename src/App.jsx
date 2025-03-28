@@ -1,3 +1,10 @@
+//This project is made by Ayush Yajaman for APHS Software Engineering Assessment Task 2
+//Client: Mr Burn
+//Frameworks: React, Tailwind
+//Access simulation/output at Github Pages: https://blackthe123.github.io/special-relativity-deploy-2/
+//Or Use Node.js to run it locally
+//Access Github repo at: https://github.com/Blackthe123/special-relativity-deploy-2
+
 import React, { useState, useEffect, useRef } from 'react';
 
 const SpecialRelativitySimulation = () => {
@@ -41,17 +48,17 @@ const SpecialRelativitySimulation = () => {
   }, [sliderValue, useLogarithmic]);
   
   //Handle slider change by user
-  const handleSliderChange = (e) => {
+  function handleSliderChange(e){
     const newValue = parseFloat(e.target.value); //get value from slider
     setSliderValue(newValue); //set variable to reflect change
-  };
+  }
   
   // Toggle between linear and logarithmic scale
-  const toggleScale = () => {
+  function toggleScale(){
     //When toggling scale reset to midpoint of slider
     setUseLogarithmic(!useLogarithmic);
     setSliderValue(0.5);
-  };
+  }
   
   //Animation loop for time dilation visualisation
   useEffect(() => {
@@ -60,7 +67,7 @@ const SpecialRelativitySimulation = () => {
     //animate: updates the elapsed time continuously using requestAnimationFrame
     //lasTimeRef.current: Stores the timestamp of the last frame
     //timestamp: Time elapsed since start of browser in milliseconds
-    const animate = (timestamp) => {
+    function animate(timestamp){
       if (!lastTimeRef.current) lastTimeRef.current = timestamp; //For first frame
       const deltaTime = timestamp - lastTimeRef.current; //Time difference between frames
       lastTimeRef.current = timestamp; //Update last time for next frame
@@ -69,7 +76,7 @@ const SpecialRelativitySimulation = () => {
       setElapsedTime(prev => prev + deltaTime / 1000);
       
       animationRef.current = requestAnimationFrame(animate);
-    };
+    }
     
     animationRef.current = requestAnimationFrame(animate); //Recursive calling for continuous update
     
@@ -82,21 +89,21 @@ const SpecialRelativitySimulation = () => {
   }, [isRunning]);
   
   //Start/stop animation
-  const toggleAnimation = () => {
+  function toggleAnimation(){
     if (isRunning) {
       cancelAnimationFrame(animationRef.current);
       lastTimeRef.current = 0;
     } 
     setIsRunning(!isRunning);
-  };
+  }
   
   //Reset stopwatch
-  const resetSimulation = () => {
+  function resetSimulation(){
     setIsRunning(false);
     cancelAnimationFrame(animationRef.current);
     setElapsedTime(0);
     lastTimeRef.current = 0;
-  };
+  }
   
   //Finding velocity as a %
   const velocityPercent = (velocity * 100).toFixed(useLogarithmic ? 4 : 1);
@@ -115,13 +122,13 @@ const SpecialRelativitySimulation = () => {
           <button style={{ cursor: "pointer" }}
             className={`px-4 py-2 rounded-md ${viewMode === 'length' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
             onClick={() => setViewMode('length')}
-          >
+          >{/*Calling setter method without explicitly creating another function just to call setter*/}
             Length Contraction
           </button>
           <button style={{ cursor: "pointer" }}
             className={`px-4 py-2 rounded-md ${viewMode === 'time' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
             onClick={() => setViewMode('time')}
-          >
+          >{/*Calling setter method without explicitly creating another function just to call setter*/}
             Time Dilation
           </button>
         </div>
@@ -180,7 +187,7 @@ const SpecialRelativitySimulation = () => {
         
         {/* Gamma value indicator */}
         <div className="text-center mt-1 text-sm">
-          Lorentz factor (γ): {gamma.toFixed(2)}
+          Lorentz factor (γ): {gamma.toFixed(2)} {/*Special characters have a yellow bounding box if viewing in Visual Studio Code*/}
         </div>
       </div>
       
